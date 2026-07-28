@@ -56,4 +56,4 @@ change one. Both also trigger on their own from a plain product ask.
 
 ## License
 
-MIT
+MIT — see [LICENSE.md](LICENSE.md).
