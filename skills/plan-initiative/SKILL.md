@@ -127,15 +127,26 @@ Read `templates.md` now, then write every file. Non-negotiables:
 - **ADR prefix**: unique across every ledger in this repo (`ADR-M01`, `ADR-P01`)
   so cross-references can never collide. Check existing folders first.
 - **Task IDs**: `{Letter}{NN}`, zero-padded, dependency-sorted, never reused.
-- **Every task file** carries: verbatim owner quote in `## Goal`, `file:line`
-  anchors in `## Context`, checkbox `## Steps`, `## Definition of done`, and a
-  literal runnable `## Verification` command. An empty `## Notes` heading waits
-  at the bottom for the executing session.
+- **Every task file** carries: verbatim owner quote in `## Goal`, a
+  `## Before / After` table, `file:line` anchors in `## Context`, checkbox
+  `## Steps`, `## Definition of done`, and a literal runnable `## Verification`
+  command. An empty `## Notes` heading waits at the bottom for the executing
+  session.
+- **`## Before / After` is written from outside the code** — what a user or a
+  caller sees today, what they see after, and one line naming what must *not*
+  change. "Adds a `parts` field" is an implementation; "a comparison comes back as
+  a table whose rows are each cited" is the change. A task whose After column can
+  only be stated as a diff is under-specified: go back and name the outcome.
 - **`## Verification` is a command, not a wish.** `pytest -q tests -k billing`,
   not "confirm billing works". If it can't be a command, name the exact
   observation and the exact place to observe it.
 - Never write a task whose file the executing agent could not finish without
   asking you a question.
+- **`EXECUTION_PROMPT.md` keeps the template's two fixed rules**: step 3 names
+  the terminal `{ID} — <short description>` as soon as the task is picked, and
+  the guardrail forbids writing local memory without the user's approval.
+- **No local memory, here either.** This skill never writes to
+  `~/.claude/projects/*/memory/`. Ask the user first; the ledger is the memory.
 
 ### Phase 6 — Self-review, then stop
 
@@ -144,6 +155,8 @@ Re-read what you wrote with fresh eyes and fix inline:
 - [ ] Any `TBD`, `TODO`, or hand-wave left in a task file? Fix it.
 - [ ] Does every task's `Depends on` reference an ID that exists?
 - [ ] Does every `## Verification` line actually run in this repo?
+- [ ] Does every `## Before / After` state an observable difference rather than a
+      diff, and name what stays unchanged?
 - [ ] Does PLAN.md's decision table match DECISIONS.md one-for-one?
 - [ ] Does STATE.md's ledger list every file in `tasks/`, and vice versa?
 - [ ] Could a stranger execute task 1 having read only STATE, REFERENCE, and
@@ -174,6 +187,8 @@ Rules of thumb:
 | Batching 8 questions in one message | One per message. Answers degrade in batches. |
 | Writing files before approval | Hard gate. Present the table, get a yes. |
 | `## Verification`: "make sure it works" | A command with an expected result. |
+| `## Before / After` written as a diff ("adds a field", "refactors X") | State it from outside: what a caller or user sees differ. |
+| Rewriting `## Before / After` when the measurement surprises you | Leave it; record the surprise in `## Notes` and append an ADR. |
 | Task file that assumes chat context | The executing session has none. Anchor everything. |
 | Renumbering tasks when scope changes | Append a new ID. IDs are permanent addresses. |
 | Editing PLAN.md to change a decision | Append an ADR that supersedes; reference it from PLAN. |

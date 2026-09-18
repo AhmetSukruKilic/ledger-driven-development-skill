@@ -172,6 +172,20 @@ Owner's ask:
 {2–3 sentences translating it into this task's slice. Name the sibling task that
 owns the other half, if any.}
 
+## Before / After
+State the change from outside the code — what someone using or calling the system
+sees. If the "After" column can only be written as an implementation detail, the
+task is not specified yet.
+
+| | Today | After this task |
+|---|---|---|
+| {what the user / caller does} | {current behaviour, concrete} | {new behaviour, concrete} |
+| {the shape of the data or reply} | {what it holds now} | {what it holds then} |
+| {the failure this closes} | {what happens today} | {what happens instead} |
+
+**Unchanged on purpose:** {the thing a reviewer might expect to move and must not
+— an interface, a wire format, a file, an exit code. Name it, or write "nothing".}
+
 ## {Security boundaries | Non-negotiables}
 - {Constraint stated as a prohibition, with the reason.}
 - {Include the attack surface / failure mode this task is closest to.}
@@ -204,6 +218,10 @@ owns the other half, if any.}
 actually happened, every deviation from the plan, the verification output
 verbatim, what was deliberately NOT done and why, and a "For {next task}"
 hand-off paragraph.}
+
+{If reality differed from `## Before / After`, say so here in one line and leave
+that table as written — it is what was planned, and the difference is the finding.
+A measurement that contradicts it is an ADR, not an edit.}
 ```
 
 ---
@@ -275,7 +293,7 @@ it cheap then code-review the diff — cheaper than running the whole task expen
 
 ## `EXECUTION_PROMPT.md` — pasteable prompt for a fresh session.
 
-```markdown
+````markdown
 # {Initiative Name} — Execution Prompt
 
 Paste this verbatim as the prompt for each new session working the `.{slug}/`
@@ -300,18 +318,29 @@ tasks, do not improvise scope beyond the task file.
    - If the `Repo` column names another repo, confirm you're in it before doing
      anything else.
    - If nothing is eligible, stop and report — don't invent work.
-3. **Read `.{slug}/REFERENCE.md` once.** Trust it; patch it only if stale.
-4. **Read only the current task's file.** Other task files belong to other sessions.
-5. **Check `.{slug}/MODELS.md`** for this task's recommended model. If it's flagged
+3. **Name the terminal** the moment the task is picked: `{ID} — <3–5 word
+   description>` (e.g. `P04 — refund webhook retries`). The Bash tool has no
+   `/dev/tty`, so write the title to the parent `claude` process's tty:
+   ```bash
+   p=$$; while t=$(ps -o tty= -p $p | tr -d ' '); [ -z "$t" ] || [ "$t" = "??" ]; do p=$(ps -o ppid= -p $p | tr -d ' '); done
+   printf '\033]0;%s\007' "P04 — refund webhook retries" > "/dev/$t"
+   ```
+   Then always ask the user to run `/rename {ID} — <description>` too, and go on.
+   A clean exit proves nothing: the `printf` succeeds even when the title
+   renders nowhere — an editor terminal that ignores OSC titles, or a session
+   running in an IDE panel with no terminal tab. Never report the terminal named.
+4. **Read `.{slug}/REFERENCE.md` once.** Trust it; patch it only if stale.
+5. **Read only the current task's file.** Other task files belong to other sessions.
+6. **Check `.{slug}/MODELS.md`** for this task's recommended model. If it's flagged
    for the expensive tier and you aren't running it, say so before proceeding.
-6. **Do the work.** Tick each `## Steps` checkbox as you go. Stay in scope — note
+7. **Do the work.** Tick each `## Steps` checkbox as you go. Stay in scope — note
    adjacent work in the Backlog, don't fold it in.
-7. **Run the `## Verification` command exactly as written.** Don't claim done
+8. **Run the `## Verification` command exactly as written.** Don't claim done
    without seeing it pass. If it fails, fix the code — never the command.
-8. **Mark it done:** fill the task file's `## Notes`; flip the STATE.md ledger row
+9. **Mark it done:** fill the task file's `## Notes`; flip the STATE.md ledger row
    to `done`; repoint "Current task"; rewrite "Last session ended".
-9. **Commit** as `{ID}: <title>`, including the `.{slug}/` file changes.
-10. **STOP.** The next task is the next session's job.
+10. **Commit** as `{ID}: <title>`, including the `.{slug}/` file changes.
+11. **STOP.** The next task is the next session's job.
 
 ### If blocked mid-task
 
@@ -321,6 +350,10 @@ credentials, SKUs, or external config the owner owns.
 
 ### Guardrails that apply regardless of task
 
+- **Never write to the agent's local memory** (`~/.claude/projects/*/memory/`,
+  `MEMORY.md`) — no creating, editing or deleting a memory file. **Hard rule.** If
+  something seems worth remembering, say so to the user and write it only after
+  they approve. What the next session needs goes in the ledger, not in memory.
 - {The invariant, restated as a stop condition.}
 - {Repo-specific rules: migration policy, grant policy, machine limits.}
 
@@ -331,4 +364,4 @@ credentials, SKUs, or external config the owner owns.
 `STATE.md`'s "Execution protocol" is the source of truth (keep them in sync).
 This file is the same protocol shaped as a standalone pasteable prompt, and it
 front-loads task *selection*, which STATE.md assumes you already know.
-```
+````
